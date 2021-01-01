@@ -1,20 +1,9 @@
-#!/usr/bin/env python3
-
 import numpy as np
 import cv2
 from agent import PurePursuitPolicy
-from utils import launch_env, seed, makedirs
+from utils import launch_env, seed
+from utils import launch_env, seed, makedirs, display_seg_mask, display_img_seg_mask
 
-DATASET_DIR = "../../dataset/sim"
-
-
-npz_index = 0
-def save_npz(img, boxes, classes):
-    global npz_index
-    with makedirs(DATASET_DIR):
-        np.savez(f"{DATASET_DIR}/{npz_index}.npz", *(img, boxes, classes))
-        npz_index += 1
-        print(npz_index)
 
 
 def clean_segmented_image(seg_img):
@@ -86,39 +75,15 @@ def clean_segmented_image(seg_img):
 
     return np.array(boxes), np.array(classes)
 
-seed(123)
-environment = launch_env()
+image = cv2.imread("/home/francoishebert/Documents/ift6757/exercise 3 - 31 decembre/dt-exercises/object_detection/utils/data_collection/image_test.png")
 
-policy = PurePursuitPolicy(environment)
+image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-MAX_STEPS = 500
-MAX_IMAGES = 1000 #size of dataset
-while True:
-    if npz_index > MAX_IMAGES:
-        break
-    obs = environment.reset()
-    environment.render(segment=True)
-    rewards = []
-
-    nb_of_steps = 0
-
-    while True:
-        action = policy.predict(np.array(obs))
-
-        obs, rew, done, misc = environment.step(action) # Gives non-segmented obs as numpy array
-        segmented_obs = environment.render_obs(True)  # Gives segmented obs as numpy array
-
-        rewards.append(rew)
-        environment.render(segment=int(nb_of_steps / 50) % 2 == 0)
+boxes, classe = clean_segmented_image(image)
+print(classe)
 
 
-        if nb_of_steps % 3 == 0:
-            # TODO boxes, classes = clean_segmented_image(segmented_obs)
-            boxes, classes = clean_segmented_image(segmented_obs)
-            if len(boxes) == 0:
-                continue
-            save_npz(cv2.resize(obs, (224, 224)), boxes, classes)
-        nb_of_steps += 1
 
-        if done or nb_of_steps > MAX_STEPS:
-            break
+# cv2.imshow('image',image)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
